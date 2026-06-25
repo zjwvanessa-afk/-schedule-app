@@ -110,10 +110,10 @@ body { font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
 .wg-head:last-child { border-right: none; }
 .wg-head.today { color: var(--accent); font-weight: 600; }
 .wg-time { padding: 3px 5px; font-size: 10px; color: var(--text-muted); text-align: right; border-right: 0.5px solid var(--border); border-bottom: 0.5px solid var(--border-light); background: var(--bg); line-height: 1.4; }
-.wg-cell { border-right: 0.5px solid var(--border-light); border-bottom: 0.5px solid var(--border-light); min-height: 44px; padding: 3px; position: relative; cursor: pointer; transition: background 0.15s; }
+.wg-cell { border-right: 0.5px solid var(--border-light); border-bottom: 0.5px solid var(--border-light); height: 56px; padding: 0; position: relative; cursor: pointer; transition: background 0.15s; overflow: visible; }
 .wg-cell:last-child { border-right: none; }
 .wg-cell:hover { background: var(--accent-light); }
-.wg-event { font-size: 10px; padding: 2px 5px; border-radius: 4px; margin-bottom: 2px; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wg-event { font-size: 10px; padding: 3px 5px; border-radius: 4px; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; position: absolute; left: 2px; right: 2px; z-index: 1; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
 .now-line { position: absolute; left: 0; right: 0; height: 1.5px; background: #EA4335; z-index: 2; pointer-events: none; }
 .now-dot { position: absolute; left: -3px; top: -3px; width: 7px; height: 7px; border-radius: 50%; background: #EA4335; }
 .assign-hint { font-size: 10px; color: var(--text-muted); text-align: center; padding: 10px 0; }
@@ -686,8 +686,25 @@ function renderWeek(){
         if(isToday(d)&&s.time==='今日'&&!s.assignedDate) return hi===0;
         return false;
       });
-      const nowLine=(weekOffset===0&&isToday(d)&&nowH===hNum)?`<div class="now-line" style="top:${Math.round(nowM/60*44)}px"><div class="now-dot"></div></div>`:'';
-      const evHtml=items.map(s=>{ const c=getBiz(s.bizDim); return `<div class="wg-event" style="background:${c.bg};color:${c.tc};cursor:pointer" onclick="openDetailModal('${s.id}')" title="${s.text}">${s.text.length>9?s.text.slice(0,9)+'…':s.text}</div>`; }).join('');
+      const nowLine=(weekOffset===0&&isToday(d)&&nowH===hNum)?`<div class="now-line" style="top:${Math.round(nowM/60*56)}px"><div class="now-dot"></div></div>`:'';
+      const CELL_H = 56; // 每小时格子高度px
+      const evHtml=items.map(s=>{
+        const c=getBiz(s.bizDim);
+        const dur = s.duration||1;
+        const heightPx = Math.max(dur * CELL_H - 4, 18);
+        // 计算分钟偏移
+        let topOffset = 2;
+        if(s.assignedTime){
+          const mins = parseInt(s.assignedTime.split(':')[1]||0);
+          topOffset = Math.round(mins/60*CELL_H) + 2;
+        }
+        const shortTitle = s.text.length>10?s.text.slice(0,10)+'…':s.text;
+        const durLabel = dur>=1 ? `${dur}h` : `${Math.round(dur*60)}min`;
+        const innerHtml = heightPx > 30
+          ? `<div style="font-weight:500">${shortTitle}</div><div style="font-size:9px;opacity:0.75;margin-top:1px">${durLabel}</div>`
+          : shortTitle;
+        return `<div class="wg-event" style="background:${c.bg};color:${c.tc};height:${heightPx}px;top:${topOffset}px" onclick="openDetailModal('${s.id}')" title="${s.text} (${durLabel})">${innerHtml}</div>`;
+      }).join('');
       const click=pendingAssign?`onclick="assignCell('${dk}','${h}')"`:'' ;
       html+=`<div class="wg-cell" ${click}>${nowLine}${evHtml}${!evHtml&&pendingAssign?'<div class="assign-hint">点击分配</div>':''}</div>`;
     });
