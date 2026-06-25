@@ -459,7 +459,8 @@ function mapFromCloud(row){
     assignedDate: row.assigned_date || null,
     assignedTime: row.assigned_time || null,
     duration: row.duration || 1,
-    created: row.created_at ? new Date(row.created_at).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'}) : ''
+    created: row.created_at ? new Date(row.created_at).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'}) : '',
+    dingId: row.ding_id || null
   };
 }
 async function loadFromCloud(){
@@ -484,7 +485,7 @@ async function saveToCloud(item){
   if(!sbClient) return;
   setSyncStatus('syncing');
   try{
-    const { error } = await sbClient.from('schedules').upsert({ id: item.id, text: item.text, biz_dim: item.bizDim, priority: item.priority, reason: item.reason, time_scope: item.time, assigned_date: item.assignedDate, assigned_time: item.assignedTime, duration: item.duration, created_at: new Date().toISOString() });
+    const { error } = await sbClient.from('schedules').upsert({ id: item.id, text: item.text, biz_dim: item.bizDim, priority: item.priority, reason: item.reason, time_scope: item.time, assigned_date: item.assignedDate, assigned_time: item.assignedTime, duration: item.duration, ding_id: item.dingId||null, created_at: new Date().toISOString() });
     if(error) throw error;
     setSyncStatus('ok');
   }catch(e){ setSyncStatus('error'); }
