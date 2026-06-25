@@ -46,7 +46,11 @@ body { font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
 
 /* ===== 统计栏 ===== */
 .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; padding: 12px 16px; }
-.stat-card { background: var(--surface); border-radius: var(--radius-md); padding: 10px 10px 8px; border: 0.5px solid var(--border); }
+.stat-card { background: var(--surface); border-radius: var(--radius-md); padding: 10px 10px 8px; border: 0.5px solid var(--border); cursor: pointer; transition: all 0.15s; }
+.stat-card:hover { border-color: var(--accent); background: var(--accent-light); }
+.stat-card.active-filter { border-color: var(--accent); background: var(--accent-light); }
+.stat-card.active-filter .stat-label { color: var(--accent); }
+.stat-card.active-filter .stat-num { color: var(--accent); }
 .stat-label { font-size: 10px; color: var(--text-muted); margin-bottom: 3px; }
 .stat-num { font-size: 20px; font-weight: 600; color: var(--text-primary); line-height: 1; }
 
@@ -160,6 +164,81 @@ body { font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
   .header-top { max-width: 760px; margin: 0 auto; }
   .tabs { max-width: 760px; margin: 0 auto; }
 }
+
+/* ===== 详情弹窗 ===== */
+.modal-mask{ position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:200;display:flex;align-items:flex-end;justify-content:center; }
+.modal-mask.center{ align-items:center; }
+.modal-box{ background:var(--surface);width:100%;max-width:480px;border-radius:var(--radius-lg) var(--radius-lg) 0 0;padding:20px 16px 32px;box-shadow:0 -4px 24px rgba(0,0,0,0.12);animation:slideUp 0.22s ease; }
+.modal-mask.center .modal-box{ border-radius:var(--radius-lg);margin:16px; }
+@keyframes slideUp{ from{transform:translateY(60px);opacity:0} to{transform:translateY(0);opacity:1} }
+.modal-header{ display:flex;align-items:center;justify-content:space-between;margin-bottom:14px; }
+.modal-title{ font-size:15px;font-weight:600;color:var(--text-primary); }
+.modal-close{ background:none;border:none;font-size:20px;color:var(--text-muted);cursor:pointer;padding:2px 6px;border-radius:6px; }
+.modal-close:hover{ background:var(--bg); }
+.modal-section{ margin-bottom:14px; }
+.modal-label{ font-size:11px;color:var(--text-muted);font-weight:500;letter-spacing:0.04em;margin-bottom:6px; }
+.modal-field{ width:100%;padding:8px 10px;font-size:13px;border:0.5px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text-primary);outline:none; }
+.modal-field:focus{ border-color:var(--accent); }
+.modal-row{ display:flex;gap:8px; }
+.modal-row .modal-field{ flex:1; }
+.modal-biz-grid{ display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:4px; }
+.modal-biz-opt{ font-size:11px;padding:5px 6px;border:0.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;text-align:center;transition:all 0.15s; }
+.modal-pri-row{ display:flex;gap:8px;margin-top:4px; }
+.modal-pri-opt{ flex:1;text-align:center;font-size:12px;padding:6px;border:0.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer; }
+.modal-pri-opt.sel-urgent{ background:#FCEBEB;color:#791F1F;border-color:#F09595; }
+.modal-pri-opt.sel-important{ background:#FEF3E2;color:#6B3800;border-color:#F5C06A; }
+.modal-pri-opt.sel-normal{ background:var(--bg);color:var(--text-secondary);border-color:var(--border); }
+.modal-actions{ display:flex;gap:8px;margin-top:16px; }
+.modal-actions .btn-submit{ flex:1;margin:0; }
+.btn-danger{ flex:1;padding:11px;font-size:14px;font-weight:500;background:transparent;color:#C0392B;border:0.5px solid #F09595;border-radius:var(--radius-md);cursor:pointer; }
+.btn-danger:hover{ background:#FCEBEB; }
+.modal-unassign{ width:100%;margin-top:8px;padding:9px;font-size:13px;background:transparent;color:var(--text-muted);border:0.5px solid var(--border);border-radius:var(--radius-md);cursor:pointer; }
+.modal-unassign:hover{ background:var(--bg);color:var(--text-secondary); }
+
+/* ===== 维度管理 ===== */
+.dim-card{ background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:13px;margin-bottom:8px;box-shadow:var(--shadow); }
+.dim-card-top{ display:flex;align-items:center;gap:10px;margin-bottom:8px; }
+.dim-color-dot{ width:12px;height:12px;border-radius:50%;flex-shrink:0; }
+.dim-name{ font-size:14px;font-weight:500;color:var(--text-primary);flex:1; }
+.dim-kw{ display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px; }
+.kw-tag{ font-size:11px;padding:2px 8px;background:var(--bg);border:0.5px solid var(--border);border-radius:20px;color:var(--text-secondary);display:flex;align-items:center;gap:3px; }
+.kw-del{ cursor:pointer;color:var(--text-muted);font-size:13px;line-height:1; }
+.kw-del:hover{ color:#C0392B; }
+.dim-add-kw{ display:flex;gap:6px;margin-top:4px; }
+.dim-add-kw input{ flex:1;padding:5px 9px;font-size:12px;border:0.5px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text-primary);outline:none; }
+.dim-add-kw input:focus{ border-color:var(--accent); }
+.dim-add-kw button{ padding:5px 10px;font-size:12px;border:0.5px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text-secondary);cursor:pointer; }
+.dim-add-kw button:hover{ background:var(--accent);color:#fff;border-color:var(--accent); }
+.dim-footer{ display:flex;gap:6px;margin-top:8px; }
+.dim-edit-name{ flex:1;padding:6px 9px;font-size:13px;border:0.5px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text-primary);outline:none; }
+.dim-edit-name:focus{ border-color:var(--accent); }
+.btn-dim-save{ padding:6px 12px;font-size:12px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer; }
+.btn-dim-del{ padding:6px 10px;font-size:12px;background:transparent;color:#C0392B;border:0.5px solid #F09595;border-radius:var(--radius-sm);cursor:pointer; }
+.btn-dim-del:hover{ background:#FCEBEB; }
+.add-dim-box{ background:var(--surface);border:0.5px dashed var(--border);border-radius:var(--radius-lg);padding:14px;margin-bottom:16px; }
+.add-dim-box .modal-label{ margin-bottom:8px; }
+.add-dim-row{ display:flex;gap:8px;margin-bottom:8px; }
+.add-dim-row input{ flex:1;padding:8px 10px;font-size:13px;border:0.5px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text-primary);outline:none; }
+.add-dim-row input:focus{ border-color:var(--accent); }
+.color-picks{ display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px; }
+.color-pick{ width:24px;height:24px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all 0.15s; }
+.color-pick.selected{ border-color:var(--text-primary);transform:scale(1.15); }
+
+/* ===== 钉钉同步 ===== */
+.sync-bar { display:flex; align-items:center; gap:8px; padding: 10px 16px; background:var(--surface); border-bottom:0.5px solid var(--border); }
+.btn-dingtalk { display:flex; align-items:center; gap:6px; padding:7px 14px; font-size:13px; background:#1677FF; color:#fff; border:none; border-radius:var(--radius-md); cursor:pointer; font-weight:500; transition:opacity 0.15s; }
+.btn-dingtalk:hover { opacity:0.88; }
+.btn-dingtalk:disabled { opacity:0.5; cursor:not-allowed; }
+.sync-tip { font-size:11px; color:var(--text-muted); flex:1; }
+.dingtalk-modal-mask { position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:300;display:flex;align-items:flex-end;justify-content:center; }
+.dingtalk-modal { background:var(--surface);width:100%;max-width:480px;border-radius:var(--radius-lg) var(--radius-lg) 0 0;padding:20px 16px 32px;max-height:80vh;overflow-y:auto; }
+.dingtalk-event { display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border-light); }
+.dingtalk-event:last-child { border-bottom:none; }
+.dingtalk-check { width:18px;height:18px;flex-shrink:0;margin-top:2px;accent-color:var(--accent); }
+.dingtalk-info { flex:1; }
+.dingtalk-title { font-size:13px;font-weight:500;color:var(--text-primary);margin-bottom:3px; }
+.dingtalk-meta { font-size:11px;color:var(--text-muted); }
+.dingtalk-imported { font-size:11px;color:#34A853;margin-left:6px; }
 </style>
 </head>
 <body>
@@ -177,18 +256,27 @@ body { font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
     <div class="tab active" onclick="setPage('schedule')">📋 日程</div>
     <div class="tab" onclick="setPage('week')">📅 周视图</div>
     <div class="tab" onclick="setPage('summary')">📊 汇总</div>
+    <div class="tab" onclick="setPage('dims')">⚙️ 维度</div>
   </div>
 </div>
 
 <!-- 统计栏 -->
 <div class="stats-row">
-  <div class="stat-card"><div class="stat-label">全部</div><div class="stat-num" id="s-all">0</div></div>
-  <div class="stat-card"><div class="stat-label">本周</div><div class="stat-num" id="s-week">0</div></div>
-  <div class="stat-card"><div class="stat-label">紧急</div><div class="stat-num" id="s-urgent">0</div></div>
-  <div class="stat-card"><div class="stat-label">今日</div><div class="stat-num" id="s-today">0</div></div>
+  <div class="stat-card" id="sc-all" onclick="filterByCard('all')"><div class="stat-label">全部</div><div class="stat-num" id="s-all">0</div></div>
+  <div class="stat-card" id="sc-week" onclick="filterByCard('week')"><div class="stat-label">本周</div><div class="stat-num" id="s-week">0</div></div>
+  <div class="stat-card" id="sc-urgent" onclick="filterByCard('urgent')"><div class="stat-label">紧急</div><div class="stat-num" id="s-urgent">0</div></div>
+  <div class="stat-card" id="sc-today" onclick="filterByCard('today')"><div class="stat-label">今日</div><div class="stat-num" id="s-today">0</div></div>
 </div>
 
 <!-- 日程页 -->
+<!-- 钉钉同步栏 -->
+<div class="sync-bar">
+  <button class="btn-dingtalk" id="btn-dingtalk" onclick="openDingtalkSync()">
+    📅 从钉钉日历同步
+  </button>
+  <span class="sync-tip" id="dingtalk-tip">点击从钉钉日历导入日程</span>
+</div>
+
 <div class="page active" id="page-schedule">
   <div class="input-section">
     <input class="input-main" id="sch-input" type="text" placeholder="输入日程事项，AI 自动识别业务维度和优先级…"/>
@@ -223,15 +311,87 @@ body { font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
   <div id="summary-content"></div>
 </div>
 
+
+
+<!-- 维度管理页 -->
+<div class="page" id="page-dims">
+  <div class="add-dim-box" style="margin-top:12px">
+    <div class="modal-label">➕ 新增业务维度</div>
+    <div class="add-dim-row">
+      <input id="new-dim-name" type="text" placeholder="维度名称，如：海外业务"/>
+    </div>
+    <div class="color-picks" id="color-picks"></div>
+    <button class="btn-submit" style="width:100%;margin-top:4px" onclick="addDim()">添加维度</button>
+  </div>
+  <div class="section-label">现有维度（点击展开编辑）</div>
+  <div id="dim-list"></div>
+</div>
+
+
+<!-- 钉钉日历同步弹窗 -->
+<div class="dingtalk-modal-mask" id="dingtalk-modal" style="display:none" onclick="closeDingtalkModal(event)">
+  <div class="dingtalk-modal">
+    <div class="modal-header">
+      <div class="modal-title">📅 钉钉日历日程</div>
+      <button class="modal-close" onclick="document.getElementById('dingtalk-modal').style.display='none'">✕</button>
+    </div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">勾选要导入的日程，AI 将自动识别业务维度和优先级</div>
+    <div id="dingtalk-event-list"><div class="empty">加载中…</div></div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn-ghost btn" onclick="toggleSelectAll()">全选 / 取消</button>
+      <button class="btn-submit" style="flex:1" id="btn-import" onclick="importSelected()">导入选中日程</button>
+    </div>
+  </div>
+</div>
+
+<!-- 详情弹窗 -->
+<div class="modal-mask" id="detail-modal" style="display:none" onclick="closeModal(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">日程详情</div>
+      <button class="modal-close" onclick="closeDetailModal()">✕</button>
+    </div>
+    <div class="modal-section">
+      <div class="modal-label">事项内容</div>
+      <input class="modal-field" id="modal-text" type="text" placeholder="事项内容"/>
+    </div>
+    <div class="modal-section">
+      <div class="modal-label">日期 / 时间 / 时长</div>
+      <div class="modal-row">
+        <input class="modal-field" id="modal-date" type="date"/>
+        <input class="modal-field" id="modal-time" type="time"/>
+        <input class="modal-field" id="modal-dur" type="number" min="0.5" max="12" step="0.5" placeholder="时长h" style="max-width:72px"/>
+      </div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-label">业务维度</div>
+      <div class="modal-biz-grid" id="modal-biz-grid"></div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-label">优先级</div>
+      <div class="modal-pri-row">
+        <div class="modal-pri-opt" id="pri-opt-urgent" onclick="selectModalPri('紧急')">🔴 紧急</div>
+        <div class="modal-pri-opt" id="pri-opt-important" onclick="selectModalPri('重要')">🟡 重要</div>
+        <div class="modal-pri-opt" id="pri-opt-normal" onclick="selectModalPri('普通')">⚪ 普通</div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-danger" onclick="deleteFromModal()">🗑 删除</button>
+      <button class="btn-submit" onclick="saveFromModal()">保存修改</button>
+    </div>
+    <button class="modal-unassign" onclick="unassignFromModal()">↩ 移回待安排列表</button>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
 // ===== Supabase 配置（填入你自己的） =====
-const SUPABASE_URL = 'https://xvppoaihrconqdcklhyz.supabase.co ';
+const SUPABASE_URL = 'https://xvppoaihrconqdcklhyz.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh2cHBvYWlocmNvbnFkY2tsaHl6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxOTIxMTEsImV4cCI6MjA5Nzc2ODExMX0.j8KuvEY8oeN1jaMHjoQ0V-dIkCA27h3brRDehEyE__w';
 // ============================================
 
-let supabase = null;
+let sbClient = null;
 let schedules = [], currentPage = 'schedule', sumTab = 'week', weekOffset = 0, pendingAssign = null;
 
 // 业务维度
@@ -241,7 +401,7 @@ const BIZ_DIMS = [
   { key:'客户拜访',   color:'#B34A1A', bg:'#FAE8DF', tc:'#6B2A0E', kw:['客户拜访','拜访客户','走访客户','客户走访','上门拜访','外出拜访','客户调研','拜访'] },
   { key:'商务接待',   color:'#B85C00', bg:'#FCEEDE', tc:'#6B3300', kw:['接待','来访','宴请','午餐','晚宴','商务餐','招待','陪同','客户来访','商务接待'] },
   { key:'组织管理',   color:'#1A6B3C', bg:'#D9F0E4', tc:'#0E4024', kw:['绩效','考核','人事','组织','架构','薪酬','招聘','晋升','干部','人才','组织管理'] },
-  { key:'内部人员交流',color:'#276B5A', bg:'#D5EDE8', tc:'#0E3D33', kw:['内部','例会','周会','月会','部门会','团队','员工沟通','一对一','内部培训','内部交流'] },
+  { key:'人员面谈',    color:'#276B5A', bg:'#D5EDE8', tc:'#0E3D33', kw:['面谈','谈话','一对一','约谈','员工面谈','交流','沟通','访谈','内部交流','员工沟通','内部沟通'] },
   { key:'生产运营',   color:'#6B3EA0', bg:'#EDE4F8', tc:'#3E1F6B', kw:['工厂','生产','质量','巡查','车间','供应链','产线','安全','设备','运营','调度','QC','巡厂'] },
   { key:'政府对接',   color:'#1A5E6B', bg:'#D5EDF2', tc:'#0E3540', kw:['政府','政策','主管部门','监管','市政','区政府','省政府','国资','政府对接'] },
   { key:'行业论坛',   color:'#4A6B1A', bg:'#E4EDD5', tc:'#283D0E', kw:['论坛','峰会','大会','发布会','行业会议','展览','博览会','演讲','主题演讲'] },
@@ -274,7 +434,7 @@ function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(
 async function initSupabase(){
   if(SUPABASE_URL==='YOUR_SUPABASE_URL'){ setSyncStatus('local'); return; }
   try{
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     setSyncStatus('ok');
     await loadFromCloud();
   }catch(e){ setSyncStatus('error'); }
@@ -288,13 +448,27 @@ function setSyncStatus(s){
 }
 
 // ===== 数据读写 =====
+function mapFromCloud(row){
+  return {
+    id: row.id,
+    text: row.text,
+    bizDim: row.biz_dim || '日常工作',
+    priority: row.priority || '普通',
+    reason: row.reason || '',
+    time: row.time_scope || '本月',
+    assignedDate: row.assigned_date || null,
+    assignedTime: row.assigned_time || null,
+    duration: row.duration || 1,
+    created: row.created_at ? new Date(row.created_at).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'}) : ''
+  };
+}
 async function loadFromCloud(){
-  if(!supabase){ loadLocal(); return; }
+  if(!sbClient){ loadLocal(); return; }
   try{
     setSyncStatus('syncing');
-    const { data, error } = await supabase.from('schedules').select('*').order('created_at', { ascending: false });
+    const { data, error } = await sbClient.from('schedules').select('*').order('created_at', { ascending: false });
     if(error) throw error;
-    schedules = data || [];
+    schedules = (data || []).map(mapFromCloud);
     setSyncStatus('ok');
     saveLocal();
     renderAll();
@@ -307,24 +481,24 @@ function loadLocal(){
 function saveLocal(){ try{ localStorage.setItem('sched_data', JSON.stringify(schedules)); }catch(e){} }
 async function saveToCloud(item){
   saveLocal();
-  if(!supabase) return;
+  if(!sbClient) return;
   setSyncStatus('syncing');
   try{
-    const { error } = await supabase.from('schedules').upsert({ id: item.id, text: item.text, biz_dim: item.bizDim, priority: item.priority, reason: item.reason, time_scope: item.time, assigned_date: item.assignedDate, assigned_time: item.assignedTime, duration: item.duration, created_at: new Date().toISOString() });
+    const { error } = await sbClient.from('schedules').upsert({ id: item.id, text: item.text, biz_dim: item.bizDim, priority: item.priority, reason: item.reason, time_scope: item.time, assigned_date: item.assignedDate, assigned_time: item.assignedTime, duration: item.duration, created_at: new Date().toISOString() });
     if(error) throw error;
     setSyncStatus('ok');
   }catch(e){ setSyncStatus('error'); }
 }
 async function deleteFromCloud(id){
   saveLocal();
-  if(!supabase) return;
-  try{ await supabase.from('schedules').delete().eq('id', id); setSyncStatus('ok'); }catch(e){ setSyncStatus('error'); }
+  if(!sbClient) return;
+  try{ await sbClient.from('schedules').delete().eq('id', id); setSyncStatus('ok'); }catch(e){ setSyncStatus('error'); }
 }
 
 // ===== AI 分类 =====
 async function aiClassify(text){
   const dimList = BIZ_DIMS.map(d=>d.key).join('、');
-  const prompt = `你是制造业集团总裁秘书助理。分析以下日程事项，返回业务维度和优先级。\n事项：${text}\n业务维度（只选其一）：${dimList}\n优先级：紧急（今明天内/高层决策/重要客户/截止迫近）、重要（本周内/影响较大）、普通\n只返回JSON：{"bizDim":"集团会议","priority":"重要","reason":"一句话说明原因"}`;
+  const prompt = `你是制造业集团总裁秘书助理。分析以下日程事项，返回业务维度和优先级。\n事项：${text}\n业务维度（只选其一）：${dimList}\n注意：「人员面谈」用于一对一谈话、员工面谈、约谈、与某人交流沟通等场景。\n优先级：紧急（今明天内/高层决策/重要客户/截止迫近）、重要（本周内/影响较大）、普通\n只返回JSON：{"bizDim":"集团会议","priority":"重要","reason":"一句话说明原因"}`;
   try{
     const res = await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST', headers:{'Content-Type':'application/json'},
@@ -344,10 +518,11 @@ async function aiClassify(text){
 // ===== 页面切换 =====
 function setPage(p){
   currentPage = p;
-  document.querySelectorAll('.page').forEach((el,i)=>{ el.classList.toggle('active', ['schedule','week','summary'][i]===p); });
-  document.querySelectorAll('.tab').forEach((el,i)=>{ el.classList.toggle('active', ['schedule','week','summary'][i]===p); });
+  document.querySelectorAll('.page').forEach((el,i)=>{ el.classList.toggle('active', ['schedule','week','summary','dims'][i]===p); });
+  document.querySelectorAll('.tab').forEach((el,i)=>{ el.classList.toggle('active', ['schedule','week','summary','dims'][i]===p); });
   if(p==='week') renderWeek();
   if(p==='summary') renderSummary();
+  if(p==='dims') renderDims();
 }
 function setSumTab(t){
   sumTab=t;
@@ -449,16 +624,32 @@ function bizPickerEl(id,cur){
 }
 function renderSchedule(){
   const sl=document.getElementById('sch-list');
+  const wk=getWeekDates(0).map(fmtDK), tdk=fmtDK(new Date());
+  // 根据筛选条件过滤
+  let filtered = schedules.filter(s=>!s.assignedDate);
+  if(activeFilter==='week') filtered=filtered.filter(s=>s.time==='今日'||s.time==='本周'||(s.assignedDate&&wk.includes(s.assignedDate)));
+  else if(activeFilter==='urgent') filtered=filtered.filter(s=>s.priority==='紧急');
+  else if(activeFilter==='today') filtered=filtered.filter(s=>s.time==='今日'||(s.assignedDate&&s.assignedDate===tdk));
+  const scheduledCount=schedules.filter(s=>s.assignedDate).length;
+  const filterLabels={all:'全部',week:'本周',urgent:'紧急',today:'今日'};
+  const filterLabel=filterLabels[activeFilter]||'全部';
   if(!schedules.length){ sl.innerHTML='<div class="empty"><div class="empty-icon">📋</div>暂无日程<br>输入事项后 AI 自动识别业务维度和优先级</div>'; return; }
-  sl.innerHTML=schedules.map(s=>{
+  if(!filtered.length){
+    const hint = activeFilter==='all'
+      ? `<div class="empty"><div class="empty-icon">✅</div>所有日程已安排到周视图<br><span style="font-size:12px;color:var(--text-muted)">共 ${scheduledCount} 项，切换到周视图查看</span></div>`
+      : `<div class="empty"><div class="empty-icon">🔍</div>「${filterLabel}」暂无待安排事项</div>`;
+    sl.innerHTML=hint; return;
+  }
+  const tipHtml=activeFilter==='all'&&scheduledCount>0?`<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;padding:6px 10px;background:var(--bg);border-radius:var(--radius-sm)">📅 已有 ${scheduledCount} 项安排在周视图中，以下为${filterLabel}待安排事项</div>`
+    :activeFilter!=='all'?`<div style="font-size:11px;color:var(--accent);margin-bottom:8px;padding:6px 10px;background:var(--accent-light);border-radius:var(--radius-sm);border-left:2px solid var(--accent)">筛选：${filterLabel} · 共 ${filtered.length} 项</div>`:'';
+  sl.innerHTML=tipHtml+filtered.map(s=>{
     const sel=pendingAssign===s.id;
-    const atB=s.assignedDate?`<span class="b-time">📅 ${s.assignedDate}${s.assignedTime?' '+s.assignedTime:''}</span>`:'';
     const durB=`<span class="b-time">⏱ ${s.duration}h</span>`;
     return `<div class="card${sel?' selected':''}">
       <div class="card-top">
         <div class="card-body">
           <div class="card-title">${s.text}</div>
-          <div class="card-meta">${bizBadgeEl(s)}${priBadgeEl(s)}${atB}${durB}</div>
+          <div class="card-meta">${bizBadgeEl(s)}${priBadgeEl(s)}${durB}</div>
           ${s.reason&&s.priority!=='analyzing'?`<div class="ai-reason">✦ ${s.reason}</div>`:''}
           ${priPickerEl(s.id,s.priority)}${bizPickerEl(s.id,s.bizDim)}
         </div>
@@ -495,7 +686,7 @@ function renderWeek(){
         return false;
       });
       const nowLine=(weekOffset===0&&isToday(d)&&nowH===hNum)?`<div class="now-line" style="top:${Math.round(nowM/60*44)}px"><div class="now-dot"></div></div>`:'';
-      const evHtml=items.map(s=>{ const c=getBiz(s.bizDim); return `<div class="wg-event" style="background:${c.bg};color:${c.tc}" title="${s.text}">${s.text.length>9?s.text.slice(0,9)+'…':s.text}</div>`; }).join('');
+      const evHtml=items.map(s=>{ const c=getBiz(s.bizDim); return `<div class="wg-event" style="background:${c.bg};color:${c.tc};cursor:pointer" onclick="openDetailModal('${s.id}')" title="${s.text}">${s.text.length>9?s.text.slice(0,9)+'…':s.text}</div>`; }).join('');
       const click=pendingAssign?`onclick="assignCell('${dk}','${h}')"`:'' ;
       html+=`<div class="wg-cell" ${click}>${nowLine}${evHtml}${!evHtml&&pendingAssign?'<div class="assign-hint">点击分配</div>':''}</div>`;
     });
@@ -586,13 +777,403 @@ function renderSummary(){
     </div>`;
 }
 
+
+
+
+
+// ===== 钉钉日历同步 =====
+let dingtalkEvents = [];
+
+async function openDingtalkSync(){
+  const btn = document.getElementById('btn-dingtalk');
+  const tip = document.getElementById('dingtalk-tip');
+  btn.disabled = true;
+  btn.textContent = '⏳ 获取中…';
+  document.getElementById('dingtalk-modal').style.display = 'flex';
+  document.getElementById('dingtalk-event-list').innerHTML = '<div class="empty">正在从钉钉日历获取日程…</div>';
+  try {
+    // 查询本月+下个月的日程
+    const now = new Date();
+    const timeMin = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const timeMax = new Date(now.getFullYear(), now.getMonth() + 2, 0, 23, 59, 59).toISOString();
+    const res = await fetch(`/.netlify/functions/dingtalk-calendar?timeMin=${encodeURIComponent(timeMin)}&timeMax=${encodeURIComponent(timeMax)}`);
+    const data = await res.json();
+    if(!data.success) throw new Error(data.error || '获取失败');
+    dingtalkEvents = data.events || [];
+    tip.textContent = `已获取 ${dingtalkEvents.length} 条钉钉日程`;
+    renderDingtalkEvents();
+  } catch(e) {
+    document.getElementById('dingtalk-event-list').innerHTML = `<div class="empty">获取失败：${e.message}<br><span style="font-size:11px">请确认 API 配置是否正确</span></div>`;
+    tip.textContent = '获取失败，请重试';
+  }
+  btn.disabled = false;
+  btn.textContent = '📅 从钉钉日历同步';
+}
+
+function renderDingtalkEvents(){
+  const list = document.getElementById('dingtalk-event-list');
+  if(!dingtalkEvents.length){ list.innerHTML = '<div class="empty">暂无日程</div>'; return; }
+  list.innerHTML = dingtalkEvents.map((e,i) => {
+    const start = e.start ? new Date(e.start) : null;
+    const dateStr = start ? `${start.getMonth()+1}/${start.getDate()} ${String(start.getHours()).padStart(2,'0')}:${String(start.getMinutes()).padStart(2,'0')}` : '';
+    const end = e.end ? new Date(e.end) : null;
+    const endStr = end ? `–${String(end.getHours()).padStart(2,'0')}:${String(end.getMinutes()).padStart(2,'0')}` : '';
+    const alreadyIn = schedules.some(s=>s.dingId===e.id);
+    return `<div class="dingtalk-event">
+      <input type="checkbox" class="dingtalk-check" id="dc-${i}" ${alreadyIn?'disabled checked':''} value="${i}"/>
+      <div class="dingtalk-info">
+        <div class="dingtalk-title">${e.title}${alreadyIn?'<span class="dingtalk-imported">✓ 已导入</span>':''}</div>
+        <div class="dingtalk-meta">${dateStr}${endStr}${e.location?' · '+e.location:''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleSelectAll(){
+  const checks = document.querySelectorAll('.dingtalk-check:not(:disabled)');
+  const allChecked = Array.from(checks).every(c=>c.checked);
+  checks.forEach(c=>c.checked=!allChecked);
+}
+
+function closeDingtalkModal(e){
+  if(e.target.id==='dingtalk-modal') document.getElementById('dingtalk-modal').style.display='none';
+}
+
+async function importSelected(){
+  const checks = document.querySelectorAll('.dingtalk-check:not(:disabled):checked');
+  if(!checks.length){ toast('请先勾选要导入的日程'); return; }
+  const btn = document.getElementById('btn-import');
+  btn.disabled = true;
+  btn.textContent = `导入中 0/${checks.length}…`;
+  let count = 0;
+  for(const chk of checks){
+    const idx = parseInt(chk.value);
+    const e = dingtalkEvents[idx];
+    if(!e) continue;
+    const start = e.start ? new Date(e.start) : null;
+    const dateStr = start ? `${start.getFullYear()}-${String(start.getMonth()+1).padStart(2,'0')}-${String(start.getDate()).padStart(2,'0')}` : null;
+    const timeStr = start ? `${String(start.getHours()).padStart(2,'0')}:${String(start.getMinutes()).padStart(2,'0')}` : null;
+    const end = e.end ? new Date(e.end) : null;
+    const dur = (start&&end) ? +((end-start)/3600000).toFixed(1) : 1;
+    const id = uid();
+    const item = {
+      id, text: e.title, bizDim:'分析中', priority:'analyzing', reason:'',
+      time: dateStr ? '本月' : '本月',
+      assignedDate: dateStr, assignedTime: timeStr,
+      duration: dur, created: nowStr(), dingId: e.id
+    };
+    schedules.unshift(item);
+    count++;
+    btn.textContent = `导入中 ${count}/${checks.length}…`;
+    saveLocal();
+    // AI 分类（异步，不阻塞）
+    aiClassify(e.title).then(({bizDim,priority,reason})=>{
+      const s = schedules.find(i=>i.id===id);
+      if(s){ s.bizDim=bizDim; s.priority=priority; s.reason=reason; saveToCloud(s); renderAll(); }
+    });
+    await saveToCloud(item);
+  }
+  document.getElementById('dingtalk-modal').style.display = 'none';
+  renderAll();
+  toast(`已导入 ${count} 条钉钉日程，AI 识别中…`);
+  btn.disabled = false;
+  btn.textContent = '导入选中日程';
+}
+
+// ===== 统计卡片筛选 =====
+let activeFilter = 'all';
+
+function filterByCard(f){
+  activeFilter = f;
+  // 更新卡片高亮
+  ['all','week','urgent','today'].forEach(k=>{
+    const el = document.getElementById('sc-'+k);
+    if(el) el.classList.toggle('active-filter', k===f);
+  });
+  // 切换到日程页
+  setPage('schedule');
+  renderSchedule();
+}
+
+// ===== 维度管理 =====
+const COLOR_OPTIONS = [
+  {color:'#185FA5',bg:'#DAEAF8',tc:'#0C3460'},
+  {color:'#2563A8',bg:'#D6E8F7',tc:'#173559'},
+  {color:'#B34A1A',bg:'#FAE8DF',tc:'#6B2A0E'},
+  {color:'#B85C00',bg:'#FCEEDE',tc:'#6B3300'},
+  {color:'#1A6B3C',bg:'#D9F0E4',tc:'#0E4024'},
+  {color:'#276B5A',bg:'#D5EDE8',tc:'#0E3D33'},
+  {color:'#6B3EA0',bg:'#EDE4F8',tc:'#3E1F6B'},
+  {color:'#1A5E6B',bg:'#D5EDF2',tc:'#0E3540'},
+  {color:'#4A6B1A',bg:'#E4EDD5',tc:'#283D0E'},
+  {color:'#6B6B1A',bg:'#EDEDD5',tc:'#3D3D0E'},
+  {color:'#7A3070',bg:'#F2DEF0',tc:'#4A1545'},
+  {color:'#555550',bg:'#EBEBEB',tc:'#2A2A28'},
+  {color:'#C0392B',bg:'#FADBD8',tc:'#7B241C'},
+  {color:'#1A6B6B',bg:'#D5EDE8',tc:'#0E3D3D'},
+];
+let selectedColorIdx = 0;
+let expandedDim = null;
+
+function saveDims(){
+  try{ localStorage.setItem('biz_dims_custom', JSON.stringify(BIZ_DIMS)); }catch(e){}
+  if(sbClient){
+    sbClient.from('biz_dims').upsert(BIZ_DIMS.map((d,i)=>({id:d.key, name:d.key, color:d.color, bg:d.bg, tc:d.tc, kw:d.kw.join(','), sort:i}))).then(()=>{}).catch(()=>{});
+  }
+}
+function loadDims(){
+  try{
+    const saved = localStorage.getItem('biz_dims_custom');
+    if(saved){
+      const parsed = JSON.parse(saved);
+      if(parsed && parsed.length > 0){
+        BIZ_DIMS.length = 0;
+        parsed.forEach(d => BIZ_DIMS.push(d));
+      }
+    }
+  }catch(e){}
+}
+
+function renderColorPicks(){
+  const wrap = document.getElementById('color-picks');
+  if(!wrap) return;
+  wrap.innerHTML = COLOR_OPTIONS.map((c,i)=>`<div class="color-pick${i===selectedColorIdx?' selected':''}" style="background:${c.color}" onclick="selectColor(${i})" title="${c.color}"></div>`).join('');
+}
+function selectColor(i){ selectedColorIdx=i; renderColorPicks(); }
+
+function addDim(){
+  const nameEl = document.getElementById('new-dim-name');
+  const name = nameEl.value.trim();
+  if(!name){ toast('请输入维度名称'); return; }
+  if(BIZ_DIMS.find(d=>d.key===name)){ toast('维度名称已存在'); return; }
+  const c = COLOR_OPTIONS[selectedColorIdx];
+  BIZ_DIMS.push({ key:name, color:c.color, bg:c.bg, tc:c.tc, kw:[name] });
+  saveDims();
+  nameEl.value='';
+  renderDims();
+  toast('维度「'+name+'」已添加');
+}
+
+async function deleteDim(key){
+  const idx = BIZ_DIMS.findIndex(d=>d.key===key);
+  if(idx===-1) return;
+  if(BIZ_DIMS.length<=1){ toast('至少保留一个维度'); return; }
+  // 找一个替代维度（优先用「日常工作」，没有则用第一个其他维度）
+  const fallback = BIZ_DIMS.find(d=>d.key!==key&&d.key==='日常工作') || BIZ_DIMS.find(d=>d.key!==key);
+  const affected = schedules.filter(s=>s.bizDim===key);
+  if(affected.length>0){
+    const confirm = window.confirm(`删除「${key}」后，已有 ${affected.length} 条日程将自动归入「${fallback.key}」，确认删除？`);
+    if(!confirm) return;
+    // 批量更新受影响日程
+    for(const s of affected){
+      s.bizDim = fallback.key;
+      await saveToCloud(s);
+    }
+    saveLocal();
+  }
+  BIZ_DIMS.splice(idx,1);
+  saveDims();
+  expandedDim=null;
+  renderDims();
+  renderAll();
+  toast(`维度已删除，${affected.length} 条日程已归入「${fallback.key}」`);
+}
+
+async function saveDimName(key){
+  const input = document.getElementById('dim-name-input-'+key.replace(/\s/g,'_'));
+  if(!input) return;
+  const newName = input.value.trim();
+  if(!newName){ toast('名称不能为空'); return; }
+  if(newName===key){ toast('名称未变更'); return; }
+  if(BIZ_DIMS.find(d=>d.key===newName)){ toast('名称已存在'); return; }
+  const dim = BIZ_DIMS.find(d=>d.key===key);
+  if(!dim) return;
+  const affected = schedules.filter(s=>s.bizDim===key);
+  // 同步更新所有已选该维度的日程
+  for(const s of affected){
+    s.bizDim = newName;
+    await saveToCloud(s);
+  }
+  dim.key = newName;
+  expandedDim = newName;
+  saveDims();
+  saveLocal();
+  renderDims();
+  renderAll();
+  toast(`已重命名为「${newName}」，${affected.length} 条日程同步更新`);
+}
+
+function addKw(key){
+  const input = document.getElementById('kw-input-'+key.replace(/\s/g,'_'));
+  if(!input) return;
+  const kw = input.value.trim();
+  if(!kw) return;
+  const dim = BIZ_DIMS.find(d=>d.key===key);
+  if(!dim) return;
+  if(!dim.kw.includes(kw)) dim.kw.push(kw);
+  input.value='';
+  saveDims();
+  renderDims();
+}
+
+function delKw(key, kw){
+  const dim = BIZ_DIMS.find(d=>d.key===key);
+  if(!dim) return;
+  dim.kw = dim.kw.filter(k=>k!==kw);
+  saveDims();
+  renderDims();
+}
+
+function toggleDimExpand(key){
+  expandedDim = expandedDim===key ? null : key;
+  renderDims();
+}
+
+function renderDims(){
+  renderColorPicks();
+  const list = document.getElementById('dim-list');
+  if(!list) return;
+  list.innerHTML = BIZ_DIMS.map(d=>{
+    const isOpen = expandedDim===d.key;
+    const safeKey = d.key.replace(/\s/g,'_');
+    return `<div class="dim-card">
+      <div class="dim-card-top" onclick="toggleDimExpand('${d.key}')" style="cursor:pointer">
+        <div class="dim-color-dot" style="background:${d.color}"></div>
+        <div class="dim-name">${d.key}</div>
+        <div style="font-size:11px;color:var(--text-muted)">${d.kw.length}个关键词 ${isOpen?'▲':'▼'}</div>
+      </div>
+      ${isOpen?`
+      <div class="dim-kw">${d.kw.map(k=>`<span class="kw-tag">${k}<span class="kw-del" onclick="delKw('${d.key}','${k}')">×</span></span>`).join('')}</div>
+      <div class="dim-add-kw">
+        <input id="kw-input-${safeKey}" type="text" placeholder="添加关键词…" onkeydown="if(event.key==='Enter')addKw('${d.key}')"/>
+        <button onclick="addKw('${d.key}')">+ 添加</button>
+      </div>
+      <div class="dim-footer">
+        <input class="dim-edit-name" id="dim-name-input-${safeKey}" type="text" value="${d.key}" placeholder="修改维度名称"/>
+        <button class="btn-dim-save" onclick="saveDimName('${d.key}')">保存</button>
+        <button class="btn-dim-del" onclick="deleteDim('${d.key}')">删除</button>
+      </div>
+      `:''}
+    </div>`;
+  }).join('');
+}
+
+// ===== 详情弹窗逻辑 =====
+let modalId = null;
+let modalPri = '普通';
+
+function openDetailModal(id){
+  const s = schedules.find(i=>i.id===id);
+  if(!s) return;
+  modalId = id;
+  modalPri = s.priority==='analyzing'?'普通':s.priority;
+  document.getElementById('modal-text').value = s.text;
+  document.getElementById('modal-date').value = s.assignedDate||'';
+  document.getElementById('modal-time').value = s.assignedTime||'';
+  document.getElementById('modal-dur').value = s.duration||1;
+  // 业务维度选项
+  const grid = document.getElementById('modal-biz-grid');
+  grid.innerHTML = BIZ_DIMS.map(d=>`<div class="modal-biz-opt" id="biz-opt-${d.key.replace(/\s/g,'_')}" style="background:${s.bizDim===d.key?d.bg:'transparent'};color:${s.bizDim===d.key?d.tc:'var(--text-secondary)'};border-color:${s.bizDim===d.key?d.color:'var(--border)'}" onclick="selectModalBiz('${d.key}')">${d.key}</div>`).join('');
+  // 优先级
+  updatePriUI();
+  document.getElementById('detail-modal').style.display='flex';
+}
+function closeDetailModal(){
+  document.getElementById('detail-modal').style.display='none';
+  modalId=null;
+}
+function closeModal(e){
+  if(e.target.id==='detail-modal') closeDetailModal();
+}
+function selectModalBiz(dim){
+  const s=schedules.find(i=>i.id===modalId);
+  if(!s) return;
+  s.bizDim=dim;
+  const grid=document.getElementById('modal-biz-grid');
+  BIZ_DIMS.forEach(d=>{
+    const el=document.getElementById('biz-opt-'+d.key.replace(/\s/g,'_'));
+    if(el){
+      el.style.background=dim===d.key?d.bg:'transparent';
+      el.style.color=dim===d.key?d.tc:'var(--text-secondary)';
+      el.style.borderColor=dim===d.key?d.color:'var(--border)';
+    }
+  });
+}
+function selectModalPri(p){
+  modalPri=p;
+  updatePriUI();
+}
+function updatePriUI(){
+  document.getElementById('pri-opt-urgent').className='modal-pri-opt'+(modalPri==='紧急'?' sel-urgent':'');
+  document.getElementById('pri-opt-important').className='modal-pri-opt'+(modalPri==='重要'?' sel-important':'');
+  document.getElementById('pri-opt-normal').className='modal-pri-opt'+(modalPri==='普通'?' sel-normal':'');
+}
+async function saveFromModal(){
+  const s=schedules.find(i=>i.id===modalId);
+  if(!s) return;
+  s.text=document.getElementById('modal-text').value.trim()||s.text;
+  s.assignedDate=document.getElementById('modal-date').value||null;
+  s.assignedTime=document.getElementById('modal-time').value||null;
+  s.duration=parseFloat(document.getElementById('modal-dur').value)||1;
+  s.priority=modalPri;
+  await saveToCloud(s);
+  closeDetailModal();
+  renderAll();
+  toast('已保存');
+}
+async function deleteFromModal(){
+  if(!modalId) return;
+  await deleteSchedule(modalId);
+  closeDetailModal();
+  toast('已删除');
+}
+async function unassignFromModal(){
+  const s=schedules.find(i=>i.id===modalId);
+  if(!s) return;
+  s.assignedDate=null;
+  s.assignedTime=null;
+  await saveToCloud(s);
+  closeDetailModal();
+  renderAll();
+  toast('已移回待安排列表');
+}
+
 function renderAll(){ renderStats(); if(currentPage==='schedule') renderSchedule(); else if(currentPage==='week') renderWeek(); else if(currentPage==='summary') renderSummary(); }
 
 // ===== 键盘录入 =====
 document.getElementById('sch-input').addEventListener('keydown', e=>{ if(e.key==='Enter') addSchedule(); });
 
+// ===== 自动同步：每30秒从云端拉取最新数据 =====
+async function autoSync(){
+  if(!sbClient) return;
+  try{
+    const { data, error } = await sbClient.from('schedules').select('*').order('created_at', { ascending: false });
+    if(error) return;
+    // 只有数据有变化时才更新，避免不必要的重渲染
+    const newJson = JSON.stringify(data);
+    const oldJson = JSON.stringify(schedules);
+    if(newJson !== oldJson){
+      schedules = (data || []).map(mapFromCloud);
+      saveLocal();
+      renderAll();
+      setSyncStatus('ok');
+    }
+  }catch(e){}
+}
+
+// ===== 页面可见时立即同步（切换标签页/手机解锁时触发）=====
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState === 'visible') autoSync();
+});
+
 // ===== 启动 =====
 initSupabase();
+
+// 加载自定义维度
+loadDims();
+
+// 30秒轮询一次
+setInterval(autoSync, 30000);
 </script>
 </body>
 </html>
