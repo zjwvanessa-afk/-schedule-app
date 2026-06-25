@@ -274,7 +274,7 @@ body { font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
   <button class="btn-dingtalk" id="btn-dingtalk" onclick="openDingtalkSync()">
     📅 从钉钉日历同步
   </button>
-  <span class="sync-tip" id="dingtalk-tip">点击从钉钉日历导入日程</span>
+  <span class="sync-tip" id="dingtalk-tip">页面加载后自动同步，也可手动点击立即同步</span>
 </div>
 
 <div class="page active" id="page-schedule">
@@ -781,104 +781,93 @@ function renderSummary(){
 
 
 
-// ===== 钉钉日历同步 =====
+// ===== 钉钉日历自动同步 =====
 let dingtalkEvents = [];
+let isSyncingDingtalk = false;
 
-async function openDingtalkSync(){
+async function fetchDingtalkEvents(){
+  const now = new Date();
+  const timeMin = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+  const timeMax = new Date(now.getFullYear(), now.getMonth() + 2, 0, 23, 59, 59).toISOString();
+  const res = await fetch(`/.netlify/functions/dingtalk-calendar?timeMin=${encodeURIComponent(timeMin)}&timeMax=${encodeURIComponent(timeMax)}`);
+  const data = await res.json();
+  if(!data.success) throw new Error(data.error || '获取失败');
+  return data.events || [];
+}
+
+async function autoSyncDingtalk(showToast=false){
+  if(isSyncingDingtalk) return;
+  isSyncingDingtalk = true;
   const btn = document.getElementById('btn-dingtalk');
   const tip = document.getElementById('dingtalk-tip');
-  btn.disabled = true;
-  btn.textContent = '⏳ 获取中…';
-  document.getElementById('dingtalk-modal').style.display = 'flex';
-  document.getElementById('dingtalk-event-list').innerHTML = '<div class="empty">正在从钉钉日历获取日程…</div>';
-  try {
-    // 查询本月+下个月的日程
-    const now = new Date();
-    const timeMin = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-    const timeMax = new Date(now.getFullYear(), now.getMonth() + 2, 0, 23, 59, 59).toISOString();
-    const res = await fetch(`/.netlify/functions/dingtalk-calendar?timeMin=${encodeURIComponent(timeMin)}&timeMax=${encodeURIComponent(timeMax)}`);
-    const data = await res.json();
-    if(!data.success) throw new Error(data.error || '获取失败');
-    dingtalkEvents = data.events || [];
-    tip.textContent = `已获取 ${dingtalkEvents.length} 条钉钉日程`;
-    renderDingtalkEvents();
-  } catch(e) {
-    document.getElementById('dingtalk-event-list').innerHTML = `<div class="empty">获取失败：${e.message}<br><span style="font-size:11px">请确认 API 配置是否正确</span></div>`;
-    tip.textContent = '获取失败，请重试';
+  if(btn){ btn.disabled=true; btn.textContent='⏳ 同步中…'; }
+  try{
+    const events = await fetchDingtalkEvents();
+    dingtalkEvents = events;
+    let added=0, removed=0;
+
+    // 1. 新增：钉钉有但本地没有的
+    for(const e of events){
+      const exists = schedules.find(s=>s.dingId===e.id);
+      if(!exists){
+        const start = e.start ? new Date(e.start) : null;
+        const dateStr = start ? `${start.getFullYear()}-${String(start.getMonth()+1).padStart(2,'0')}-${String(start.getDate()).padStart(2,'0')}` : null;
+        const timeStr = start ? `${String(start.getHours()).padStart(2,'0')}:${String(start.getMinutes()).padStart(2,'0')}` : null;
+        const end = e.end ? new Date(e.end) : null;
+        const dur = (start&&end) ? +((end-start)/3600000).toFixed(1) : 1;
+        const id = uid();
+        const item = {
+          id, text:e.title, bizDim:'分析中', priority:'analyzing', reason:'',
+          time:'本月', assignedDate:dateStr, assignedTime:timeStr,
+          duration:dur, created:nowStr(), dingId:e.id
+        };
+        schedules.unshift(item);
+        added++;
+        saveLocal();
+        await saveToCloud(item);
+        // AI 分类异步处理
+        aiClassify(e.title).then(({bizDim,priority,reason})=>{
+          const s=schedules.find(i=>i.id===id);
+          if(s){s.bizDim=bizDim;s.priority=priority;s.reason=reason;saveToCloud(s);renderAll();}
+        });
+      }
+    }
+
+    // 2. 删除：本地有 dingId 但钉钉已删除的
+    const dingIds = new Set(events.map(e=>e.id));
+    const toRemove = schedules.filter(s=>s.dingId && !dingIds.has(s.dingId));
+    for(const s of toRemove){
+      schedules = schedules.filter(i=>i.id!==s.id);
+      await deleteFromCloud(s.id);
+      removed++;
+    }
+
+    saveLocal();
+    renderAll();
+    const msg = added>0||removed>0
+      ? `钉钉同步完成：新增 ${added} 条${removed>0?'，移除 '+removed+' 条':''}`
+      : '钉钉日历已是最新';
+    if(tip) tip.textContent = `上次同步：${nowStr()}，共 ${events.length} 条`;
+    if(showToast||added>0||removed>0) toast(msg);
+  }catch(e){
+    if(tip) tip.textContent = '同步失败，请检查网络';
+    if(showToast) toast('钉钉同步失败：'+e.message);
   }
-  btn.disabled = false;
-  btn.textContent = '📅 从钉钉日历同步';
+  if(btn){ btn.disabled=false; btn.textContent='📅 从钉钉日历同步'; }
+  isSyncingDingtalk = false;
 }
 
-function renderDingtalkEvents(){
-  const list = document.getElementById('dingtalk-event-list');
-  if(!dingtalkEvents.length){ list.innerHTML = '<div class="empty">暂无日程</div>'; return; }
-  list.innerHTML = dingtalkEvents.map((e,i) => {
-    const start = e.start ? new Date(e.start) : null;
-    const dateStr = start ? `${start.getMonth()+1}/${start.getDate()} ${String(start.getHours()).padStart(2,'0')}:${String(start.getMinutes()).padStart(2,'0')}` : '';
-    const end = e.end ? new Date(e.end) : null;
-    const endStr = end ? `–${String(end.getHours()).padStart(2,'0')}:${String(end.getMinutes()).padStart(2,'0')}` : '';
-    const alreadyIn = schedules.some(s=>s.dingId===e.id);
-    return `<div class="dingtalk-event">
-      <input type="checkbox" class="dingtalk-check" id="dc-${i}" ${alreadyIn?'disabled checked':''} value="${i}"/>
-      <div class="dingtalk-info">
-        <div class="dingtalk-title">${e.title}${alreadyIn?'<span class="dingtalk-imported">✓ 已导入</span>':''}</div>
-        <div class="dingtalk-meta">${dateStr}${endStr}${e.location?' · '+e.location:''}</div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function toggleSelectAll(){
-  const checks = document.querySelectorAll('.dingtalk-check:not(:disabled)');
-  const allChecked = Array.from(checks).every(c=>c.checked);
-  checks.forEach(c=>c.checked=!allChecked);
+// 手动点击同步按钮
+function openDingtalkSync(){
+  autoSyncDingtalk(true);
 }
 
 function closeDingtalkModal(e){
   if(e.target.id==='dingtalk-modal') document.getElementById('dingtalk-modal').style.display='none';
 }
-
-async function importSelected(){
-  const checks = document.querySelectorAll('.dingtalk-check:not(:disabled):checked');
-  if(!checks.length){ toast('请先勾选要导入的日程'); return; }
-  const btn = document.getElementById('btn-import');
-  btn.disabled = true;
-  btn.textContent = `导入中 0/${checks.length}…`;
-  let count = 0;
-  for(const chk of checks){
-    const idx = parseInt(chk.value);
-    const e = dingtalkEvents[idx];
-    if(!e) continue;
-    const start = e.start ? new Date(e.start) : null;
-    const dateStr = start ? `${start.getFullYear()}-${String(start.getMonth()+1).padStart(2,'0')}-${String(start.getDate()).padStart(2,'0')}` : null;
-    const timeStr = start ? `${String(start.getHours()).padStart(2,'0')}:${String(start.getMinutes()).padStart(2,'0')}` : null;
-    const end = e.end ? new Date(e.end) : null;
-    const dur = (start&&end) ? +((end-start)/3600000).toFixed(1) : 1;
-    const id = uid();
-    const item = {
-      id, text: e.title, bizDim:'分析中', priority:'analyzing', reason:'',
-      time: dateStr ? '本月' : '本月',
-      assignedDate: dateStr, assignedTime: timeStr,
-      duration: dur, created: nowStr(), dingId: e.id
-    };
-    schedules.unshift(item);
-    count++;
-    btn.textContent = `导入中 ${count}/${checks.length}…`;
-    saveLocal();
-    // AI 分类（异步，不阻塞）
-    aiClassify(e.title).then(({bizDim,priority,reason})=>{
-      const s = schedules.find(i=>i.id===id);
-      if(s){ s.bizDim=bizDim; s.priority=priority; s.reason=reason; saveToCloud(s); renderAll(); }
-    });
-    await saveToCloud(item);
-  }
-  document.getElementById('dingtalk-modal').style.display = 'none';
-  renderAll();
-  toast(`已导入 ${count} 条钉钉日程，AI 识别中…`);
-  btn.disabled = false;
-  btn.textContent = '导入选中日程';
-}
+function toggleSelectAll(){}
+function renderDingtalkEvents(){}
+async function importSelected(){}
 
 // ===== 统计卡片筛选 =====
 let activeFilter = 'all';
@@ -1172,7 +1161,13 @@ initSupabase();
 // 加载自定义维度
 loadDims();
 
-// 30秒轮询一次
+// 页面加载完成后自动同步钉钉日历
+setTimeout(()=>autoSyncDingtalk(false), 2000);
+
+// 每30分钟自动同步一次钉钉
+setInterval(()=>autoSyncDingtalk(false), 30*60*1000);
+
+// 每30秒同步 Supabase 数据
 setInterval(autoSync, 30000);
 </script>
 </body>
